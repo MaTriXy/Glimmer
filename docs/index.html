@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Glimmer — Transparent Glass UI Design System</title>
+<meta name="description" content="A Claude Code skill for designing transparent, glassmorphic, and AR-inspired user interfaces across Web, SwiftUI, Jetpack Compose, and React Native." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<style>
+/* === GLASS UI FOUNDATION === */
+:root {
+  /* Glass component tokens — always dark (design system rule #1) */
+  --glass-surface-1: rgba(0, 0, 0, 0.55);
+  --glass-surface-2: rgba(15, 15, 20, 0.75);
+  --glass-surface-3: rgba(0, 0, 0, 0.85);
+  --glass-text-1: rgba(255, 255, 255, 0.95);
+  --glass-text-2: rgba(255, 255, 255, 0.6);
+  --glass-text-3: rgba(255, 255, 255, 0.35);
+  --glass-accent-cyan: #a0e6f5;
+  --glass-accent-coral: #ffbeb4;
+  --glass-accent-gold: #ffe1a0;
+  --glass-accent-lilac: #d2beff;
+  --glass-accent-mint: #b8f0d8;
+  --glass-accent-rose: #f5b8d0;
+  --glass-glow-cyan: rgba(160, 230, 245, 0.3);
+  --glass-glow-coral: rgba(255, 190, 180, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-bright: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --glass-shadow-elevated: 0 16px 48px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.3);
+  --glass-blur: blur(24px) saturate(1.2);
+  --glass-blur-heavy: blur(40px) saturate(1.4);
+  --glass-pad-sm: 12px;
+  --glass-pad-md: 20px;
+  --glass-pad-lg: 32px;
+  --glass-radius-sm: 8px;
+  --glass-radius-md: 16px;
+  --glass-radius-lg: 24px;
+  --glass-ease-ambient: cubic-bezier(0.16, 1, 0.3, 1);
+  --glass-ease-responsive: cubic-bezier(0.2, 0, 0, 1);
+  --glass-duration-ambient: 1.2s;
+  --glass-duration-fast: 0.15s;
+
+  /* Page chrome — dark mode defaults reference the glass tokens directly */
+  --page-bg: #06060e;
+  --page-nav-bg: rgba(6, 6, 14, 0.8);
+}
+
+/* === LIGHT THEME === */
+[data-theme="light"] {
+  --page-bg: #f4f5f7;
+  --page-nav-bg: rgba(244, 245, 247, 0.85);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--glass-text-1);
+  background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+[data-theme="light"] body {
+  color: rgba(0, 0, 0, 0.87);
+}
+
+/* === ANIMATIONS === */
+@keyframes glass-materialize {
+  from { opacity: 0; transform: scale(0.97) translateY(6px); filter: blur(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+@keyframes glass-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes bgShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, -20px); }
+}
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-25px, 15px); }
+}
+@keyframes notifEnter {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.98); filter: blur(8px); }
+  60% { opacity: 0.7; filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes glass-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+@keyframes terminal-typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* === STICKY NAV === */
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--page-nav-bg);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  border-bottom: 1px solid var(--glass-border);
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+[data-theme="light"] .site-nav {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+.site-nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+}
+.site-nav-brand {
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+  color: var(--glass-accent-cyan);
+  text-decoration: none;
+}
+[data-theme="light"] .site-nav-brand {
+  color: #0891b2;
+}
+.site-nav-links {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+}
+.site-nav-links a {
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--glass-text-3);
+  text-decoration: none;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+}
+.site-nav-links a:hover { color: var(--glass-text-2); background: rgba(255,255,255,0.04); }
+.site-nav-links a.active { color: var(--glass-accent-cyan); background: rgba(160,230,245,0.08); }
+[data-theme="light"] .site-nav-links a { color: rgba(0,0,0,0.4); }
+[data-theme="light"] .site-nav-links a:hover { color: rgba(0,0,0,0.7); background: rgba(0,0,0,0.04); }
+[data-theme="light"] .site-nav-links a.active { color: #0891b2; background: rgba(8,145,178,0.08); }
+
+/* === HERO === */
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  /* Hero always uses glass text — dark surfaces demand bright content (Principle #1) */
+  color: var(--glass-text-1);
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transition: background 1.2s ease;
+}
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 80px 20px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* === SECTIONS === */
+.doc-section {
+  position: relative;
+  padding: 100px 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.doc-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border-bright), transparent);
+}
+.section-label {
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--glass-accent-cyan);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin-bottom: 20px;
+}
+.section-body {
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: 0.015em;
+  line-height: 1.6;
+  color: var(--glass-text-2);
+  max-width: 680px;
+}
+[data-theme="light"] .doc-section::before { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent); }
+[data-theme="light"] .section-label { color: #0891b2; }
+[data-theme="light"] .section-title { color: rgba(0,0,0,0.87); }
+[data-theme="light"] .section-body { color: rgba(0,0,0,0.6); }
+
+/* === GLASS CARDS (doc) === */
+.glass-card {
+  position: relative;
+  background: var(--glass-surface-1);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-top-color: var(--glass-border-bright);
+  border-radius: var(--glass-radius-md);
+  padding: var(--glass-pad-lg);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+.glass-card--elevated {
+  background: var(--glass-surface-2);
+  box-shadow: var(--glass-shadow-elevated);
+}
+/* Doc section cards need a lifted surface to stand out against the solid dark page */
+.doc-section .glass-card {
+  background: rgba(20, 20, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.18);
+}
+/* Light theme: doc glass cards use a lighter frosted surface */
+[data-theme="light"] .doc-section .glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(24px) saturate(1.1);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
+  border-color: rgba(0, 0, 0, 0.06);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.87);
+}
+[data-theme="light"] .doc-section .glass-card .section-body,
+[data-theme="light"] .doc-section .glass-card .principle-desc,
+[data-theme="light"] .doc-section .glass-card .install-step-desc,
+[data-theme="light"] .doc-section .glass-card .platform-desc {
+  color: rgba(0, 0, 0, 0.6);
+}
+[data-theme="light"] .doc-section .glass-card blockquote {
+  border-left-color: #0891b2;
+  color: rgba(0, 0, 0, 0.6);
+}
+/* Component showcase cards stay dark always — they demo the glass design system */
+[data-theme="light"] #components .glass-card {
+  background: var(--glass-surface-1);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-color: var(--glass-border);
+  border-top-color: var(--glass-border-bright);
+  box-shadow: var(--glass-shadow);
+  color: var(--glass-text-1);
+}
+[data-theme="light"] #components .glass-card .component-label {
+  color: var(--glass-text-3);
+}
+
+/* === GRID LAYOUTS === */
+.principles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 32px;
+}
+/* Platform tabs */
+.platform-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 32px;
+  margin-bottom: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.platform-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.03em;
+  color: var(--glass-text-3);
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  cursor: pointer;
+  transition: all var(--glass-duration-fast) var(--glass-ease-responsive);
+}
+.platform-tab:hover {
+  color: var(--glass-text-2);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--glass-border-bright);
+}
+.platform-tab.active {
+  color: var(--glass-accent-cyan);
+  background: rgba(160, 230, 245, 0.08);
+  border-color: rgba(160, 230, 245, 0.25);
+  box-shadow: 0 0 16px rgba(160, 230, 245, 0.06);
+}
+.platform-tab-icon {
+  font-size: 1.125rem;
+}
+[data-theme="light"] .platform-tab {
+  color: rgba(0, 0, 0, 0.4);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="light"] .platform-tab:hover {
+  color: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .platform-tab.active {
+  color: #0891b2;
+  background: rgba(8, 145, 178, 0.08);
+  border-color: rgba(8, 145, 178, 0.25);
+  box-shadow: none;
+}
+.platform-detail {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 32px;
+}
+
+/* === CODE BLOCKS === */
+.glass-code {
+  position: relative;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--glass-text-2);
+  margin-top: 12px;
+}
+[data-theme="light"] .doc-section .glass-code {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.7);
+}
+[data-theme="light"] #platforms .glass-code {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+}
+.glass-code-lang {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-text-3);
+}
+
+/* === PRINCIPLE CARD === */
+.principle-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(160, 230, 245, 0.08);
+  border: 1px solid rgba(160, 230, 245, 0.2);
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: var(--glass-accent-cyan);
+  margin-bottom: 12px;
+}
+.principle-title {
+  font-weight: 700;
+  font-size: 1.125rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 8px;
+}
+.principle-desc {
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--glass-text-2);
+}
+[data-theme="light"] .principle-number { background: rgba(8,145,178,0.08); border-color: rgba(8,145,178,0.2); color: #0891b2; }
+
+/* === PLATFORM CARD === */
+.platform-icon {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+.platform-name {
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.platform-desc {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--glass-text-2);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.platform-screenshot-placeholder {
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: var(--glass-radius-sm);
+  padding: 24px;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--glass-text-3);
+  margin-top: 12px;
+}
+[data-theme="light"] .platform-screenshot-placeholder {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.1);
+  color: rgba(0,0,0,0.4);
+}
+
+/* Skills link */
+.skills-link {
+  color: var(--glass-accent-cyan);
+  text-decoration: none;
+  font-weight: 600;
+}
+[data-theme="light"] .skills-link {
+  color: #0891b2;
+}
+
+/* === COMPONENT SHOWCASE === */
+.component-label {
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--glass-text-3);
+  margin-bottom: 12px;
+}
+
+/* Buttons */
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--glass-radius-sm);
+  cursor: pointer;
+  transition: all var(--glass-duration-fast) var(--glass-ease-responsive);
+  border: 1px solid transparent;
+}
+.glass-btn-primary {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--glass-accent-cyan);
+  border-color: rgba(160, 230, 245, 0.25);
+}
+.glass-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(160, 230, 245, 0.4);
+  box-shadow: 0 0 20px var(--glass-glow-cyan);
+}
+.glass-btn-ghost {
+  background: transparent;
+  color: var(--glass-text-2);
+  border-color: var(--glass-border);
+}
+.glass-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--glass-text-1);
+}
+.glass-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(160, 230, 245, 0.6), 0 0 24px rgba(160, 230, 245, 0.12);
+}
+
+/* Input */
+.glass-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--glass-text-1);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  transition: all var(--glass-duration-fast) var(--glass-ease-responsive);
+}
+.glass-input::placeholder { color: var(--glass-text-3); }
+.glass-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(160, 230, 245, 0.4);
+  box-shadow: 0 1px 0 0 var(--glass-accent-cyan), 0 0 16px rgba(160, 230, 245, 0.08);
+}
+
+/* Status dots */
+.glass-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.glass-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: glass-pulse 2s ease-in-out infinite;
+}
+
+/* Chip */
+.glass-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--glass-text-2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+}
+.glass-chip--accent {
+  color: var(--glass-accent-cyan);
+  border-color: rgba(160, 230, 245, 0.2);
+  background: rgba(160, 230, 245, 0.06);
+}
+
+/* Progress */
+.glass-progress {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.glass-progress-bar {
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--glass-accent-cyan), transparent);
+  border-radius: 2px;
+  animation: glass-progress-indeterminate 2s var(--glass-ease-ambient) infinite;
+}
+.glass-progress-bar--determinate {
+  animation: none;
+  background: var(--glass-accent-cyan);
+  box-shadow: 0 0 8px var(--glass-glow-cyan);
+  transition: width 0.6s var(--glass-ease-ambient);
+}
+
+/* === INSTALL SECTION === */
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+.install-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.install-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(160, 230, 245, 0.08);
+  border: 1px solid rgba(160, 230, 245, 0.2);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--glass-accent-cyan);
+}
+.install-step-content { flex: 1; }
+.install-step-title {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.install-step-desc {
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: var(--glass-text-2);
+  line-height: 1.5;
+}
+[data-theme="light"] .install-step-num { background: rgba(8,145,178,0.08); border-color: rgba(8,145,178,0.2); color: #0891b2; }
+
+/* === TERMINAL === */
+.glass-terminal {
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  border-radius: var(--glass-radius-md);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 680px;
+  margin: 24px auto 0;
+}
+.glass-terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.glass-terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+.glass-terminal-dot--red { background: #ff5f57; }
+.glass-terminal-dot--yellow { background: #febc2e; }
+.glass-terminal-dot--green { background: #28c840; }
+.glass-terminal-title {
+  flex: 1;
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--glass-text-3);
+  letter-spacing: 0.04em;
+  margin-right: 52px;
+}
+.glass-terminal-body {
+  padding: 20px 24px 24px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--glass-text-2);
+}
+.glass-terminal-prompt {
+  color: var(--glass-accent-mint);
+}
+.glass-terminal-typing {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: terminal-typing 1.8s steps(30) 0.8s both;
+  vertical-align: bottom;
+}
+.glass-terminal-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: var(--glass-accent-cyan);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: terminal-blink 1s step-end 2.8s infinite;
+  opacity: 0;
+  animation-fill-mode: both;
+}
+.glass-terminal-cursor.blink {
+  animation: terminal-blink 1s step-end infinite;
+  opacity: 1;
+}
+.glass-terminal-output {
+  color: var(--glass-text-3);
+  opacity: 0;
+  animation: glass-materialize 0.6s ease 3s both;
+}
+[data-theme="light"] .glass-terminal {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* === ABOUT + INSTALL SIDE BY SIDE === */
+.about-install-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+.about-install-row .doc-section-col {
+  padding: 0;
+}
+.about-install-row .glass-terminal {
+  margin-top: 24px;
+  max-width: none;
+}
+.about-quote {
+  color: var(--glass-text-2);
+}
+[data-theme="light"] .about-quote {
+  color: rgba(0, 0, 0, 0.55);
+  border-left-color: #0891b2 !important;
+}
+@media (max-width: 768px) {
+  .about-install-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === FOOTER === */
+.site-footer {
+  padding: 60px 24px;
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+}
+.footer-brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+  color: var(--glass-accent-cyan);
+  margin-bottom: 8px;
+}
+.footer-tagline {
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: var(--glass-text-3);
+  margin-bottom: 20px;
+}
+.footer-link {
+  color: var(--glass-text-2);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius-sm);
+  transition: all 0.15s ease;
+}
+.footer-link:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--glass-border-bright);
+  color: var(--glass-text-1);
+}
+
+[data-theme="light"] .site-footer { border-top-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .footer-brand { color: #0891b2; }
+[data-theme="light"] .footer-tagline { color: rgba(0,0,0,0.4); }
+[data-theme="light"] .footer-link { color: rgba(0,0,0,0.6); border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .footer-link:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.15); color: rgba(0,0,0,0.87); }
+
+/* === THEME TOGGLE === */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--glass-border);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.15s ease;
+  color: var(--glass-text-3);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.04);
+  color: var(--glass-text-2);
+}
+[data-theme="light"] .theme-toggle { color: rgba(0,0,0,0.4); border-color: rgba(0,0,0,0.12); }
+[data-theme="light"] .theme-toggle:hover { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.7); }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .site-nav-links { display: none; }
+  .hero-content { padding: 72px 16px 40px; }
+  .doc-section { padding: 60px 16px; }
+  .section-title { font-size: 1.5rem; }
+  .principles-grid,
+  .platforms-grid,
+  .components-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === ACCESSIBILITY === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --glass-surface-1: rgba(0, 0, 0, 0.9);
+    --glass-surface-2: rgba(0, 0, 0, 0.95);
+    --glass-text-1: #fff;
+    --glass-text-2: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.25);
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="module">
+import { createElement, useState, useEffect, useRef, useCallback } from 'https://esm.sh/react@18.3.1';
+import { createRoot } from 'https://esm.sh/react-dom@18.3.1/client';
+import htm from 'https://esm.sh/htm@3.1.1';
+
+const html = htm.bind(createElement);
+
+// ── Design Tokens (JS) ──────────────────────────────────────────────
+const SURFACE = {
+  primary: 'rgba(0, 0, 0, 0.55)',
+  elevated: 'rgba(15, 15, 20, 0.75)',
+  overlay: 'rgba(0, 0, 0, 0.85)',
+};
+const TEXT = {
+  primary: 'rgba(255, 255, 255, 0.95)',
+  secondary: 'rgba(255, 255, 255, 0.6)',
+  tertiary: 'rgba(255, 255, 255, 0.35)',
+  faint: 'rgba(255, 255, 255, 0.25)',
+  muted: 'rgba(255, 255, 255, 0.3)',
+};
+const ACCENT = {
+  cyan: '#a0e6f5',
+  coral: '#ffbeb4',
+  gold: '#ffe1a0',
+  lilac: '#d2beff',
+  mint: '#b8f0d8',
+  rose: '#f5b8d0',
+};
+const GLOW = {
+  cyan: 'rgba(160, 230, 245, 0.25)',
+  coral: 'rgba(255, 190, 180, 0.2)',
+};
+const BORDER = {
+  subtle: 'rgba(255, 255, 255, 0.08)',
+  bright: 'rgba(255, 255, 255, 0.15)',
+  separator: 'rgba(255, 255, 255, 0.06)',
+};
+const BLUR = {
+  standard: 'blur(24px) saturate(1.2)',
+  heavy: 'blur(40px) saturate(1.4)',
+};
+const SHADOW = {
+  card: '0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.25)',
+  elevated: '0 16px 48px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.3)',
+};
+const RADIUS = { sm: 8, md: 16, lg: 24, pill: 999 };
+const TIMING = {
+  ambient: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  responsive: 'cubic-bezier(0.2, 0, 0, 1)',
+};
+
+// ── Scenes ───────────────────────────────────────────────────────────
+const SCENES = [
+  { id: 'dark', label: 'Night', light: false, bg: 'linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 20%, #0a1628 40%, #0d1f0d 60%, #1a0f2e 80%, #0a0a1a 100%)', bgSize: '400% 400%', animate: true },
+  { id: 'daylight', label: 'Daylight', light: true, bg: 'linear-gradient(170deg, #87CEEB 0%, #B0E0F6 25%, #E0F0FF 50%, #c8e6c9 75%, #a5d6a7 100%)', bgSize: '100% 100%', animate: false },
+  { id: 'warm', label: 'Golden Hour', light: true, bg: 'linear-gradient(135deg, #1a0f05 0%, #3d1c0a 15%, #7a3b12 30%, #c67830 50%, #e8a84c 65%, #f5d89a 80%, #fffbe6 100%)', bgSize: '100% 100%', animate: false },
+  { id: 'city', label: 'City', light: false, bg: 'linear-gradient(180deg, #1a1e2e 0%, #2c3e50 20%, #4a6274 40%, #6a8a9e 55%, #8eaab8 70%, #3d4f5f 85%, #1a2030 100%)', bgSize: '100% 100%', animate: false },
+  { id: 'nature', label: 'Forest', light: false, bg: 'linear-gradient(160deg, #0d1f0d 0%, #1a3a1a 15%, #2d5a2d 30%, #3d7a3d 45%, #4a8a3a 55%, #6aaa4a 70%, #1a3a1a 90%, #0d1f0d 100%)', bgSize: '100% 100%', animate: false },
+  { id: 'snow', label: 'Snow', light: true, bg: 'linear-gradient(170deg, #e8edf2 0%, #d0d8e0 15%, #c0ccd8 30%, #f0f4f8 50%, #ffffff 65%, #e0e8f0 80%, #d5dde5 100%)', bgSize: '100% 100%', animate: false },
+];
+
+function isLightScene(sceneId) {
+  const s = SCENES.find((x) => x.id === sceneId);
+  return s ? s.light : false;
+}
+
+// ── Shared Styles ────────────────────────────────────────────────────
+const labelStyle = {
+  fontSize: 10,
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: TEXT.tertiary,
+};
+const dataValueStyle = {
+  fontWeight: 700,
+  fontVariantNumeric: 'tabular-nums',
+};
+
+// ── Demo Components (ported from transparent-glass-demo.jsx) ─────────
+
+function AmbientBackground({ scene }) {
+  const s = SCENES.find((x) => x.id === scene) || SCENES[0];
+  const isLight = scene === 'daylight' || scene === 'snow';
+  const orbColor1 = isLight ? 'rgba(0,0,0,0.03)' : 'rgba(160,230,245,0.06)';
+  const orbColor2 = isLight ? 'rgba(0,0,0,0.02)' : 'rgba(210,190,255,0.05)';
+
+  return html`
+    <div class="hero-bg" style=${{ background: s.bg, backgroundSize: s.bgSize, animation: s.animate ? 'bgShift 25s ease infinite' : 'none' }}>
+      <div class="hero-orb" style=${{ top: '15%', left: '20%', width: 300, height: 300, background: 'radial-gradient(circle, ' + orbColor1 + ' 0%, transparent 70%)', filter: 'blur(60px)', animation: 'float1 12s ease-in-out infinite' }} />
+      <div class="hero-orb" style=${{ top: '55%', right: '10%', width: 250, height: 250, background: 'radial-gradient(circle, ' + orbColor2 + ' 0%, transparent 70%)', filter: 'blur(50px)', animation: 'float2 15s ease-in-out infinite' }} />
+      ${scene === 'daylight' && html`
+        <div style=${{ position: 'absolute', bottom: '8%', left: 0, right: 0, height: '35%', background: 'linear-gradient(0deg, #5a8a5a 0%, #7ab87a 40%, transparent 100%)', opacity: 0.6 }} />
+        <div style=${{ position: 'absolute', top: '15%', left: '60%', width: 120, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.7)', filter: 'blur(20px)' }} />
+      `}
+      ${scene === 'city' && html`
+        <div style=${{ position: 'absolute', bottom: 0, left: '10%', width: 60, height: '45%', background: 'rgba(30,40,60,0.6)', borderRadius: '4px 4px 0 0' }} />
+        <div style=${{ position: 'absolute', bottom: 0, left: '18%', width: 80, height: '55%', background: 'rgba(40,50,70,0.5)', borderRadius: '4px 4px 0 0' }} />
+        <div style=${{ position: 'absolute', bottom: 0, right: '20%', width: 70, height: '50%', background: 'rgba(35,45,65,0.55)', borderRadius: '4px 4px 0 0' }} />
+        <div style=${{ position: 'absolute', bottom: 0, right: '8%', width: 55, height: '38%', background: 'rgba(45,55,75,0.45)', borderRadius: '4px 4px 0 0' }} />
+      `}
+      ${scene === 'snow' && html`
+        <div style=${{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%', background: 'linear-gradient(0deg, #f8f8ff 0%, #e8ecf0 60%, transparent 100%)' }} />
+        <div style=${{ position: 'absolute', bottom: '38%', left: '15%', width: 80, height: 140, background: 'linear-gradient(0deg, #4a6a4a, #3a5a3a)', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)', opacity: 0.5 }} />
+        <div style=${{ position: 'absolute', bottom: '38%', right: '25%', width: 60, height: 110, background: 'linear-gradient(0deg, #4a6a4a, #3a5a3a)', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)', opacity: 0.4 }} />
+      `}
+    </div>
+  `;
+}
+
+function DemoGlassCard({ children, style, delay = 0, elevated = false, scene }) {
+  const bright = scene && isLightScene(scene);
+  const bg = bright
+    ? (elevated ? 'rgba(10, 10, 18, 0.82)' : 'rgba(0, 0, 0, 0.75)')
+    : (elevated ? SURFACE.elevated : SURFACE.primary);
+  const blur = bright ? BLUR.heavy : BLUR.standard;
+  return html`
+    <div style=${{
+      position: 'relative',
+      background: bg,
+      backdropFilter: blur,
+      WebkitBackdropFilter: blur,
+      border: '1px solid ' + BORDER.subtle,
+      borderTopColor: BORDER.bright,
+      borderRadius: RADIUS.md,
+      padding: 28,
+      boxShadow: elevated ? SHADOW.elevated : SHADOW.card,
+      maxWidth: 480,
+      animation: 'glass-materialize 1.2s ' + TIMING.ambient + ' ' + delay + 's both',
+      overflow: 'hidden',
+      transition: 'background 0.6s ease, backdrop-filter 0.6s ease',
+      ...style,
+    }}>
+      ${children}
+    </div>
+  `;
+}
+
+function StatusDot({ status = 'active' }) {
+  const colors = { active: ACCENT.mint, warning: ACCENT.gold, error: ACCENT.coral };
+  const color = colors[status];
+  return html`
+    <span style=${{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color }}>
+      <span style=${{ width: 6, height: 6, borderRadius: '50%', background: color, boxShadow: '0 0 8px ' + color, animation: 'glass-pulse 2s ease-in-out infinite' }} />
+      ${status}
+    </span>
+  `;
+}
+
+function DemoButton({ children, variant = 'primary', onClick, style: overrides }) {
+  const isPrimary = variant === 'primary';
+  return html`
+    <button
+      onClick=${onClick}
+      style=${{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        padding: '10px 20px',
+        fontFamily: 'inherit', fontWeight: 600, fontSize: 13,
+        letterSpacing: '0.04em', textTransform: 'uppercase',
+        borderRadius: RADIUS.sm, cursor: 'pointer',
+        border: '1px solid ' + (isPrimary ? 'rgba(160,230,245,0.25)' : BORDER.subtle),
+        background: isPrimary ? 'rgba(255,255,255,0.12)' : 'transparent',
+        color: isPrimary ? ACCENT.cyan : TEXT.secondary,
+        transition: 'all 0.15s ' + TIMING.responsive,
+        ...overrides,
+      }}
+      onMouseEnter=${(e) => {
+        e.currentTarget.style.background = isPrimary ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)';
+        if (isPrimary) e.currentTarget.style.boxShadow = '0 0 20px ' + GLOW.cyan;
+      }}
+      onMouseLeave=${(e) => {
+        e.currentTarget.style.background = isPrimary ? 'rgba(255,255,255,0.12)' : 'transparent';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
+    >
+      ${children}
+    </button>
+  `;
+}
+
+function CircularGauge({ value = 72, size = 90, label, unit = '%' }) {
+  const r = (size - 8) / 2;
+  const circumference = 2 * Math.PI * r;
+  const [offset, setOffset] = useState(circumference);
+  useEffect(() => {
+    const t = setTimeout(() => setOffset(circumference * (1 - value / 100)), 300);
+    return () => clearTimeout(t);
+  }, [value, circumference]);
+
+  return html`
+    <div style=${{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <div style=${{ position: 'relative', width: size, height: size }}>
+        <svg width=${size} height=${size} style=${{ transform: 'rotate(-90deg)' }}>
+          <circle cx=${size / 2} cy=${size / 2} r=${r} fill="none" stroke=${BORDER.separator} strokeWidth=${4} />
+          <circle cx=${size / 2} cy=${size / 2} r=${r} fill="none" stroke=${ACCENT.cyan} strokeWidth=${4}
+            strokeLinecap="round" strokeDasharray=${circumference} strokeDashoffset=${offset}
+            style=${{ transition: 'stroke-dashoffset 1.5s ' + TIMING.ambient, filter: 'drop-shadow(0 0 6px ' + GLOW.cyan + ')' }}
+          />
+        </svg>
+        <div style=${{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+          <span style=${{ fontSize: 20, ...dataValueStyle, letterSpacing: '-0.02em' }}>${value}</span>
+          <span style=${{ fontSize: 10, color: TEXT.tertiary, fontWeight: 500 }}>${unit}</span>
+        </div>
+      </div>
+      ${label && html`<span style=${{ ...labelStyle, fontSize: 10 }}>${label}</span>`}
+    </div>
+  `;
+}
+
+function DataBar({ value = 65, color = ACCENT.cyan, label, displayValue }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setWidth(value), 200);
+    return () => clearTimeout(t);
+  }, [value]);
+
+  return html`
+    <div style=${{ marginBottom: 14 }}>
+      <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+        <span style=${{ fontSize: 12, fontWeight: 600, letterSpacing: '0.03em', color: TEXT.secondary }}>${label}</span>
+        <span style=${{ fontSize: 13, color, ...dataValueStyle }}>${displayValue || (value + '%')}</span>
+      </div>
+      <div style=${{ height: 4, background: BORDER.separator, borderRadius: 2, overflow: 'hidden' }}>
+        <div style=${{
+          height: '100%', borderRadius: 2,
+          width: width + '%',
+          background: 'linear-gradient(90deg, ' + color + ', ' + ACCENT.lilac + ')',
+          transition: 'width 1.2s ' + TIMING.ambient,
+          boxShadow: '0 0 8px ' + GLOW.cyan,
+        }} />
+      </div>
+    </div>
+  `;
+}
+
+function HudCorners({ children, color = 'rgba(160,230,245,0.3)', size = 14, style }) {
+  const corner = (pos) => ({ position: 'absolute', width: size, height: size, borderColor: color, borderStyle: 'solid', borderWidth: 0, ...pos });
+  return html`
+    <div style=${{ position: 'relative', ...style }}>
+      <div style=${corner({ top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 })} />
+      <div style=${corner({ top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 })} />
+      <div style=${corner({ bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 })} />
+      <div style=${corner({ bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 })} />
+      ${children}
+    </div>
+  `;
+}
+
+function TimeDisplay() {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const i = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(i);
+  }, []);
+  return html`
+    <div style=${{ textAlign: 'center' }}>
+      <div style=${{ fontSize: 50, letterSpacing: '-0.02em', lineHeight: 1, ...dataValueStyle }}>
+        ${time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })}
+      </div>
+      <div style=${{ ...labelStyle, letterSpacing: '0.1em', marginTop: 6, fontSize: 12 }}>
+        ${time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+      </div>
+    </div>
+  `;
+}
+
+function SceneSwitcher({ scene, setScene }) {
+  const bright = isLightScene(scene);
+  return html`
+    <div style=${{
+      display: 'flex', gap: 3, padding: 4,
+      background: bright ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.6)',
+      backdropFilter: 'blur(30px) saturate(1.3)',
+      WebkitBackdropFilter: 'blur(30px) saturate(1.3)',
+      border: '1px solid ' + BORDER.subtle,
+      borderRadius: RADIUS.pill,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+      animation: 'glass-materialize 1s ' + TIMING.ambient + ' 0.3s both',
+      flexWrap: 'wrap', justifyContent: 'center',
+      marginBottom: 20,
+      transition: 'background 0.6s ease',
+    }}>
+      ${SCENES.map((s) => html`
+        <button
+          key=${s.id}
+          onClick=${() => setScene(s.id)}
+          style=${{
+            padding: '8px 14px',
+            fontFamily: 'inherit', fontWeight: 600, fontSize: 11,
+            letterSpacing: '0.05em', textTransform: 'uppercase',
+            border: 'none', borderRadius: RADIUS.pill, cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            background: scene === s.id ? 'rgba(160,230,245,0.1)' : 'transparent',
+            color: scene === s.id ? ACCENT.cyan : TEXT.tertiary,
+          }}
+        >
+          ${s.label}
+        </button>
+      `)}
+    </div>
+  `;
+}
+
+function Notification({ title, body, accent = ACCENT.coral, show }) {
+  if (!show) return null;
+  return html`
+    <div style=${{
+      position: 'absolute', top: 80, right: 24, maxWidth: 320,
+      padding: '14px 18px',
+      background: 'rgba(10,10,15,0.82)',
+      backdropFilter: BLUR.heavy,
+      WebkitBackdropFilter: BLUR.heavy,
+      border: '1px solid ' + BORDER.subtle,
+      borderLeft: '3px solid ' + accent,
+      borderRadius: RADIUS.md,
+      boxShadow: SHADOW.elevated,
+      animation: 'notifEnter 1.8s ' + TIMING.ambient + ' forwards',
+      zIndex: 10,
+    }}>
+      <div style=${{ fontSize: 13, fontWeight: 600, letterSpacing: '0.02em' }}>${title}</div>
+      <div style=${{ fontSize: 12, fontWeight: 500, color: TEXT.secondary, marginTop: 3, lineHeight: 1.45 }}>${body}</div>
+    </div>
+  `;
+}
+
+// ── Nav Scroll Spy ──────────────────────────────────────────────────
+function useScrollSpy(sectionIds) {
+  const [active, setActive] = useState(sectionIds[0]);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        });
+      },
+      { rootMargin: '-40% 0px -55% 0px' }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+  return active;
+}
+
+// ── Principles Data ──────────────────────────────────────────────────
+const PRINCIPLES = [
+  { title: 'Dark Surfaces, Bright Content', desc: 'Surfaces are always dark (near-black with slight transparency). Content is always bright. This creates maximum contrast against any background and avoids halation.' },
+  { title: 'Additive Color Model', desc: 'Desaturated, high-luminance accent colors only. Saturated primaries vanish against colorful backgrounds. Think of color as adding light, not painting pigment.' },
+  { title: 'Glanceable Typography', desc: 'Medium-to-bold weights (500+), wide letter-spacing, 16px minimum body. Fonts with large counters and open apertures for readability against complex backgrounds.' },
+  { title: 'Depth via Dark Shadows', desc: 'Rich, multi-layer dark shadows create a sense of occlusion. Luminous edge borders and inner glows replace traditional Material-style elevation.' },
+  { title: 'Ambient Motion', desc: 'Slow materialization entrances (1.2s). Instant interaction feedback (<150ms). Elements materialize from light — no slide-ins, no bouncy springs.' },
+  { title: 'Bright Focus States', desc: 'Glowing cyan outlines for focus. Subtle luminance increase on hover. Immediate brightness flash on active. States must be unmistakable against the world.' },
+];
+
+// ── Platform Data ────────────────────────────────────────────────────
+const PLATFORMS = [
+  {
+    name: 'Web / React',
+    icon: '\u{1F310}',
+    desc: 'CSS backdrop-filter with custom properties for design tokens. The default platform for prototypes and artifacts.',
+    code: `.glass-card {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+}`,
+    lang: 'css',
+  },
+  {
+    name: 'SwiftUI',
+    icon: '\u{F8FF}',
+    desc: 'Native .ultraThinMaterial with dark overlay. On visionOS, use .glassBackgroundEffect() for true glass.',
+    code: `GlassCard {
+    Text("Navigation")
+        .font(.system(size: 11, weight: .semibold))
+        .tracking(1.0)
+    Text("N Shoreline Blvd")
+        .font(.system(size: 28, weight: .bold))
+}
+.glassMaterialize(delay: 0.15)`,
+    lang: 'swift',
+  },
+  {
+    name: 'Jetpack Compose',
+    icon: '\u{1F916}',
+    desc: 'Solid dark surfaces (blur is expensive pre-API 31). Android XR uses Compose Glimmer natively.',
+    code: `GlassCard(elevated = true) {
+    GlassLabel("System Telemetry")
+    Text(
+        text = "72%",
+        style = GlassTypography.dataValue,
+        color = GlassTheme.accentCyan
+    )
+}`,
+    lang: 'kotlin',
+  },
+  {
+    name: 'React Native',
+    icon: '\u{1F4F1}',
+    desc: 'iOS uses @react-native-community/blur or expo-blur. Android falls back to solid dark surfaces.',
+    code: `<GlassCard elevated delay={150}>
+  <GlassLabel text="Navigation" />
+  <Text style={{ color: GlassTheme.text.primary,
+    fontSize: 28, fontWeight: '700' }}>
+    N Shoreline Blvd
+  </Text>
+  <GlassButton title="Directions" onPress={go} />
+</GlassCard>`,
+    lang: 'tsx',
+  },
+];
+
+// ── Main App ─────────────────────────────────────────────────────────
+function App() {
+  const [scene, setScene] = useState('daylight');
+  const [showNotif, setShowNotif] = useState(false);
+  const [activeNav, setActiveNav] = useState('home');
+  const [activePlatform, setActivePlatform] = useState(0);
+
+  // Theme: check localStorage, then system preference, default to dark
+  const getInitialTheme = () => {
+    const saved = localStorage.getItem('glimmer-theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  };
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('glimmer-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((t) => t === 'dark' ? 'light' : 'dark');
+  }, []);
+
+  const sectionIds = ['hero', 'about', 'install', 'principles', 'platforms', 'components'];
+  const activeSection = useScrollSpy(sectionIds);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setShowNotif(true), 2500);
+    const t2 = setTimeout(() => setShowNotif(false), 7000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return html`
+    <!-- Sticky Nav -->
+    <nav class="site-nav">
+      <div class="site-nav-inner">
+        <a href="#hero" class="site-nav-brand">GLIMMER</a>
+        <ul class="site-nav-links">
+          ${[
+            ['hero', 'Demo'],
+            ['about', 'About'],
+            ['install', 'Install'],
+            ['principles', 'Principles'],
+            ['platforms', 'Platforms'],
+            ['components', 'Components'],
+          ].map(([id, label]) => html`
+            <li key=${id}><a href=${'#' + id} class=${activeSection === id ? 'active' : ''}>${label}</a></li>
+          `)}
+          <li><a href="https://github.com/MaTriXy/Glimmer" target="_blank" rel="noopener">GitHub</a></li>
+        </ul>
+        <button class="theme-toggle" onClick=${toggleTheme} aria-label="Toggle theme" title=${theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+          ${theme === 'dark' ? '\u2600' : '\u263E'}
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero Section: Interactive Demo -->
+    <section id="hero" class="hero-section">
+      <${AmbientBackground} scene=${scene} />
+      <${Notification} show=${showNotif} title="Incoming Message" body="Leyla shared a photo from the summit trail" />
+
+      <div class="hero-content">
+        <${SceneSwitcher} scene=${scene} setScene=${setScene} />
+
+        <!-- Clock card -->
+        <${DemoGlassCard} delay=${0} scene=${scene} style=${{ width: '100%', maxWidth: 380, textAlign: 'center' }}>
+          <${HudCorners} style=${{ padding: 16 }}>
+            <${TimeDisplay} />
+            <div style=${{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 16 }}>
+              <${StatusDot} status="active" />
+              <span style=${{ ...labelStyle, fontSize: 10, color: TEXT.faint }}>
+                GLASS UI \u2022 ${scene.toUpperCase()}
+              </span>
+            </div>
+          <//>
+        <//>
+
+        <!-- Content cards grid -->
+        <div style=${{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, width: '100%' }}>
+
+          <!-- Navigation card -->
+          <${DemoGlassCard} delay=${0.15} scene=${scene}>
+            <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <span style=${labelStyle}>NAVIGATION</span>
+              <${StatusDot} status="active" />
+            </div>
+            <div style=${{ fontSize: 26, fontWeight: 700, letterSpacing: '0.02em', lineHeight: 1.2 }}>N Shoreline Blvd</div>
+            <div style=${{ fontSize: 15, fontWeight: 500, color: TEXT.secondary, marginTop: 4 }}>450m ahead — Turn right</div>
+            <div style=${{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 18, paddingTop: 14, borderTop: '1px solid ' + BORDER.separator }}>
+              <div>
+                <div style=${{ ...labelStyle, color: TEXT.muted }}>ETA</div>
+                <div style=${{ fontSize: 20, color: ACCENT.cyan, ...dataValueStyle }}>12 min</div>
+              </div>
+              <div style=${{ width: 1, height: 32, background: BORDER.separator }} />
+              <div>
+                <div style=${{ ...labelStyle, color: TEXT.muted }}>DISTANCE</div>
+                <div style=${{ fontSize: 20, ...dataValueStyle }}>3.2 km</div>
+              </div>
+            </div>
+            <div style=${{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <${DemoButton}>Directions<//>
+              <${DemoButton} variant="ghost">Dismiss<//>
+            </div>
+          <//>
+
+          <!-- Telemetry card -->
+          <${DemoGlassCard} delay=${0.3} elevated=${true} scene=${scene}>
+            <span style=${labelStyle}>SYSTEM TELEMETRY</span>
+            <div style=${{ display: 'flex', justifyContent: 'space-around', margin: '18px 0' }}>
+              <${CircularGauge} value=${72} label="CPU" />
+              <${CircularGauge} value=${58} label="Memory" />
+              <${CircularGauge} value=${34} label="Network" unit="ms" />
+            </div>
+            <${DataBar} value=${82} label="Battery" displayValue="82%" color=${ACCENT.mint} />
+            <${DataBar} value=${45} label="Storage" displayValue="45 GB" color=${ACCENT.lilac} />
+            <${DataBar} value=${91} label="Signal" displayValue="-42 dBm" color=${ACCENT.cyan} />
+          <//>
+
+          <!-- Now Playing card -->
+          <${DemoGlassCard} delay=${0.45} scene=${scene}>
+            <div style=${{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <span style=${labelStyle}>NOW PLAYING</span>
+              <div style=${{
+                display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '3px 10px',
+                background: 'rgba(160,230,245,0.06)',
+                border: '1px solid rgba(160,230,245,0.2)',
+                borderRadius: RADIUS.pill,
+                fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+                textTransform: 'uppercase', color: ACCENT.cyan,
+              }}>
+                \u266B LIVE
+              </div>
+            </div>
+            <div style=${{ fontSize: 20, fontWeight: 700, letterSpacing: '0.02em' }}>Cosmic Tide</div>
+            <div style=${{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>Solar Echoes</div>
+            <div style=${{ marginTop: 16 }}>
+              <div style=${{ height: 3, background: BORDER.separator, borderRadius: 2, overflow: 'hidden' }}>
+                <div style=${{ height: '100%', width: '62%', borderRadius: 2, background: 'linear-gradient(90deg, ' + ACCENT.gold + ', ' + ACCENT.coral + ')', boxShadow: '0 0 8px ' + GLOW.coral }} />
+              </div>
+              <div style=${{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10, fontWeight: 500, color: TEXT.muted, fontVariantNumeric: 'tabular-nums' }}>
+                <span>2:14</span><span>3:38</span>
+              </div>
+            </div>
+            <div style=${{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 14 }}>
+              <${DemoButton} variant="ghost" style=${{ padding: '8px 12px' }}>\u23EE<//>
+              <${DemoButton} style=${{ padding: '8px 18px', fontSize: 16 }}>\u25B6<//>
+              <${DemoButton} variant="ghost" style=${{ padding: '8px 12px' }}>\u23ED<//>
+            </div>
+          <//>
+
+          <!-- Environment card -->
+          <${DemoGlassCard} delay=${0.6} scene=${scene}>
+            <${HudCorners} color="rgba(255,225,160,0.25)">
+              <div style=${{ padding: 6 }}>
+                <span style=${labelStyle}>ENVIRONMENT</span>
+                <div style=${{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 10 }}>
+                  <span style=${{ fontSize: 44, letterSpacing: '-0.02em', color: ACCENT.gold, ...dataValueStyle }}>22\u00B0</span>
+                  <span style=${{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.4)' }}>Partly Cloudy</span>
+                </div>
+                <div style=${{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 16, paddingTop: 14, borderTop: '1px solid ' + BORDER.separator }}>
+                  ${[
+                    { l: 'HUMIDITY', v: '64%', c: ACCENT.cyan },
+                    { l: 'WIND', v: '12 km/h', c: ACCENT.lilac },
+                    { l: 'UV', v: '3 LOW', c: ACCENT.mint },
+                  ].map((d) => html`
+                    <div key=${d.l}>
+                      <div style=${{ fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', color: TEXT.muted }}>${d.l}</div>
+                      <div style=${{ fontSize: 14, color: d.c, marginTop: 3, ...dataValueStyle }}>${d.v}</div>
+                    </div>
+                  `)}
+                </div>
+              </div>
+            <//>
+          <//>
+        </div>
+
+        <div style=${{ ...labelStyle, fontSize: 10, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.12)', marginTop: 20, textAlign: 'center' }}>
+          Switch scenes above to test glass components against different environments
+        </div>
+      </div>
+
+      <!-- Bottom navigation bar (within hero) -->
+      <div style=${{
+        position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: 3, padding: 5,
+        background: 'rgba(10,10,15,0.8)',
+        backdropFilter: BLUR.heavy,
+        WebkitBackdropFilter: BLUR.heavy,
+        border: '1px solid ' + BORDER.subtle,
+        borderRadius: RADIUS.pill,
+        boxShadow: SHADOW.elevated,
+        zIndex: 10,
+        animation: 'glass-materialize 1.2s ' + TIMING.ambient + ' 1s both',
+      }}>
+        ${['home', 'map', 'data', 'settings'].map((item) => html`
+          <button
+            key=${item}
+            onClick=${() => setActiveNav(item)}
+            style=${{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '9px 16px',
+              fontFamily: 'inherit', fontWeight: 600, fontSize: 11,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
+              color: activeNav === item ? ACCENT.cyan : TEXT.muted,
+              background: activeNav === item ? 'rgba(160,230,245,0.08)' : 'transparent',
+              border: 'none', borderRadius: RADIUS.pill, cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            ${{ home: '\u25C9', map: '\u25CE', data: '\u25C8', settings: '\u2699' }[item]} ${item}
+          </button>
+        `)}
+      </div>
+    </section>
+
+    <!-- About + Install Side by Side -->
+    <section id="about" class="doc-section">
+      <div class="about-install-row">
+        <div class="doc-section-col">
+          <div class="section-label">About</div>
+          <div class="section-title">What is Glimmer?</div>
+          <div class="glass-card">
+            <p class="section-body" style=${{ marginBottom: 16 }}>
+              Glimmer is a Claude Code skill that teaches Claude how to design transparent, glassmorphic, and AR-inspired user interfaces across Web, SwiftUI, Jetpack Compose, and React Native.
+            </p>
+            <p class="section-body" style=${{ marginBottom: 20 }}>
+              Grounded in the real physics and human factors of transparent display design, it produces UIs that look futuristic and actually work \u2014 because they\u2019re rooted in how light, color, and human vision truly behave.
+            </p>
+            <blockquote class="about-quote" style=${{
+              borderLeft: '3px solid ' + ACCENT.cyan,
+              paddingLeft: 20,
+              fontStyle: 'italic',
+              fontWeight: 500,
+              fontSize: '1.0625rem',
+              lineHeight: 1.6,
+            }}>
+              "There\u2019s no screen, no crisp blank page. Instead, you\u2019re faced with the world itself."
+            </blockquote>
+          </div>
+        </div>
+        <div id="install" class="doc-section-col">
+          <div class="section-label">Get Started</div>
+          <div class="section-title">Installation</div>
+          <p class="section-body" style=${{ marginBottom: 8 }}>
+            One command via <a href="https://skills.sh" target="_blank" rel="noopener" class="skills-link">skills.sh</a>. Then just ask Claude for a glass UI.
+          </p>
+          <div class="glass-terminal">
+            <div class="glass-terminal-bar">
+              <div class="glass-terminal-dot glass-terminal-dot--red"></div>
+              <div class="glass-terminal-dot glass-terminal-dot--yellow"></div>
+              <div class="glass-terminal-dot glass-terminal-dot--green"></div>
+              <div class="glass-terminal-title">Terminal</div>
+            </div>
+            <div class="glass-terminal-body">
+              <div><span class="glass-terminal-prompt">$ </span><span class="glass-terminal-typing">npx skills add MaTriXy/Glimmer</span><span class="glass-terminal-cursor"></span></div>
+              <div class="glass-terminal-output" style=${{ marginTop: 8 }}>
+                <div>\u2713 Glimmer skill installed to .claude/skills/glimmer</div>
+                <div style=${{ marginTop: 12 }}>
+                  <span class="glass-terminal-prompt">$ </span><span style=${{ color: 'var(--glass-text-3)' }}>Ask Claude: "design a glass dashboard UI"</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Principles Section -->
+    <section id="principles" class="doc-section">
+      <div class="section-label">Design System</div>
+      <div class="section-title">6 Design Principles</div>
+      <p class="section-body">
+        These rules define Glimmer\u2019s design language. Every component, every color choice, every animation follows from these foundations.
+      </p>
+      <div class="principles-grid">
+        ${PRINCIPLES.map((p, i) => html`
+          <div key=${i} class="glass-card" style=${{ animation: 'glass-materialize 0.8s ' + TIMING.ambient + ' ' + (i * 0.1) + 's both' }}>
+            <div class="principle-number">${i + 1}</div>
+            <div class="principle-title">${p.title}</div>
+            <div class="principle-desc">${p.desc}</div>
+          </div>
+        `)}
+      </div>
+    </section>
+
+    <!-- Platforms Section -->
+    <section id="platforms" class="doc-section">
+      <div class="section-label">Cross-Platform</div>
+      <div class="section-title">Supported Platforms</div>
+      <p class="section-body">
+        The core design principles work universally. The implementation details differ per platform \u2014 blur is an enhancement, not the foundation.
+      </p>
+      <div class="platform-tabs">
+        ${PLATFORMS.map((p, i) => html`
+          <button key=${i} class=${'platform-tab' + (activePlatform === i ? ' active' : '')} onClick=${() => setActivePlatform(i)}>
+            <span class="platform-tab-icon">${p.icon}</span>
+            ${p.name}
+          </button>
+        `)}
+      </div>
+      <div class="platform-detail">
+        <div class="glass-card" key=${activePlatform} style=${{ animation: 'glass-materialize 0.4s ' + TIMING.ambient + ' both' }}>
+          <div style=${{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <span style=${{ fontSize: '1.5rem' }}>${PLATFORMS[activePlatform].icon}</span>
+            <span class="platform-name" style=${{ marginBottom: 0 }}>${PLATFORMS[activePlatform].name}</span>
+          </div>
+          <div class="platform-desc">${PLATFORMS[activePlatform].desc}</div>
+          <div class="glass-code">
+            <span class="glass-code-lang">${PLATFORMS[activePlatform].lang}</span>
+            <pre style=${{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>${PLATFORMS[activePlatform].code}</pre>
+          </div>
+          <div class="platform-screenshot-placeholder">Screenshot coming soon</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Components Section -->
+    <section id="components" class="doc-section">
+      <div class="section-label">Component Library</div>
+      <div class="section-title">Live Component Showcase</div>
+      <p class="section-body">
+        Production-ready glass components. All follow the dark-surface, bright-content, additive-color foundation.
+      </p>
+      <div class="components-grid">
+
+        <!-- Buttons -->
+        <div class="glass-card">
+          <div class="component-label">Buttons</div>
+          <div style=${{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style=${{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button class="glass-btn glass-btn-primary">Primary</button>
+              <button class="glass-btn glass-btn-ghost">Ghost</button>
+            </div>
+            <div style=${{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button class="glass-btn glass-btn-primary" style=${{ color: 'var(--glass-accent-coral)', borderColor: 'rgba(255,190,180,0.25)' }}>Coral</button>
+              <button class="glass-btn glass-btn-primary" style=${{ color: 'var(--glass-accent-gold)', borderColor: 'rgba(255,225,160,0.25)' }}>Gold</button>
+              <button class="glass-btn glass-btn-primary" style=${{ color: 'var(--glass-accent-mint)', borderColor: 'rgba(184,240,216,0.25)' }}>Mint</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="glass-card">
+          <div class="component-label">Input</div>
+          <label style=${{ display: 'block', fontWeight: 600, fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--glass-text-3)', marginBottom: 8 }}>Destination</label>
+          <input class="glass-input" type="text" placeholder="Enter location..." />
+        </div>
+
+        <!-- Status Indicators -->
+        <div class="glass-card">
+          <div class="component-label">Status Indicators</div>
+          <div style=${{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div class="glass-status" style=${{ color: 'var(--glass-accent-mint)' }}>
+              <span class="glass-status-dot" style=${{ background: 'var(--glass-accent-mint)' }}></span>
+              Active
+            </div>
+            <div class="glass-status" style=${{ color: 'var(--glass-accent-gold)' }}>
+              <span class="glass-status-dot" style=${{ background: 'var(--glass-accent-gold)' }}></span>
+              Warning
+            </div>
+            <div class="glass-status" style=${{ color: 'var(--glass-accent-coral)' }}>
+              <span class="glass-status-dot" style=${{ background: 'var(--glass-accent-coral)' }}></span>
+              Error
+            </div>
+          </div>
+        </div>
+
+        <!-- Chips -->
+        <div class="glass-card">
+          <div class="component-label">Chips / Tags</div>
+          <div style=${{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span class="glass-chip">Default</span>
+            <span class="glass-chip glass-chip--accent">Accent</span>
+            <span class="glass-chip" style=${{ color: 'var(--glass-accent-coral)', borderColor: 'rgba(255,190,180,0.2)', background: 'rgba(255,190,180,0.06)' }}>Coral</span>
+            <span class="glass-chip" style=${{ color: 'var(--glass-accent-gold)', borderColor: 'rgba(255,225,160,0.2)', background: 'rgba(255,225,160,0.06)' }}>Gold</span>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="glass-card">
+          <div class="component-label">Progress / Loading</div>
+          <div style=${{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <div style=${{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--glass-text-3)', marginBottom: 8 }}>Indeterminate</div>
+              <div class="glass-progress">
+                <div class="glass-progress-bar"></div>
+              </div>
+            </div>
+            <div>
+              <div style=${{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--glass-text-3)', marginBottom: 8 }}>Determinate (65%)</div>
+              <div class="glass-progress">
+                <div class="glass-progress-bar glass-progress-bar--determinate" style=${{ width: '65%' }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Visualization -->
+        <div class="glass-card">
+          <div class="component-label">Data Visualization</div>
+          <div style=${{ display: 'flex', justifyContent: 'space-around' }}>
+            <${CircularGauge} value=${85} label="CPU" size=${80} />
+            <${CircularGauge} value=${42} label="Memory" size=${80} />
+          </div>
+          <div style=${{ marginTop: 16 }}>
+            <${DataBar} value=${73} label="Bandwidth" displayValue="73%" color=${ACCENT.mint} />
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <div class="footer-brand">GLIMMER</div>
+      <div class="footer-tagline">Interfaces that feel like light woven into reality.</div>
+      <a href="https://github.com/MaTriXy/Glimmer" class="footer-link" target="_blank" rel="noopener">View on GitHub</a>
+    </footer>
+  `;
+}
+
+// ── Mount ────────────────────────────────────────────────────────────
+createRoot(document.getElementById('root')).render(html`<${App} />`);
+</script>
+</body>
+</html>
