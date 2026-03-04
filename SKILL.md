@@ -1,19 +1,6 @@
 ---
 name: glimmer
-description: >
-  Design and build stunning transparent, glassmorphic, and AR-inspired user interfaces
-  that simulate the look and feel of heads-up displays, smart glasses, and holographic
-  overlays — across web (HTML/CSS/React), SwiftUI, Jetpack Compose, and React Native.
-  Use this skill whenever the user asks for glass UI, transparent UI, HUD interfaces,
-  AR/XR mockups, holographic dashboards, futuristic interfaces, sci-fi UI, heads-up
-  displays, smart glasses UI, visionOS interfaces, or any interface that should feel
-  like it's floating over the real world. Also trigger when users mention "glassmorphism",
-  "frosted glass", "translucent UI", "ambient display", "overlay interface",
-  ".ultraThinMaterial", "Material3 transparent", or want to create interfaces inspired
-  by Google Glass, Apple Vision Pro, Meta glasses, Android XR, or any wearable display
-  technology. Trigger for native mobile glass effects in SwiftUI, Jetpack Compose, or
-  React Native. Even if the user just says "make it look futuristic" or "floating UI"
-  — this is the skill to use.
+description: 'Use for glass UI, transparent UI, HUD/AR interfaces, holographic dashboards, or futuristic sci-fi UI. Trigger for glassmorphism, frosted glass, translucent UI, .ultraThinMaterial, Material3 transparent, or interfaces inspired by Apple Vision Pro, Google Glass, or Meta glasses. Also trigger for make it futuristic or floating UI. Builds glassmorphic, AR-inspired UIs across HTML/CSS/React, SwiftUI, Jetpack Compose, and React Native.'
 ---
 
 # Transparent Glass UI
@@ -70,24 +57,23 @@ Colors must be close to white to maintain contrast on transparent surfaces. Satu
 
 ```css
 :root {
-  /* Desaturated, luminous accent palette */
-  --accent-cyan: #a0e6f5;
-  --accent-coral: #ffbeb4;
-  --accent-gold: #ffe1a0;
-  --accent-lilac: #d2beff;
-  --accent-mint: #b8f0d8;
-  --accent-rose: #f5b8d0;
-  
-  /* Surface system — always dark */
-  --surface-primary: rgba(0, 0, 0, 0.55);
-  --surface-elevated: rgba(15, 15, 20, 0.75);
-  --surface-overlay: rgba(0, 0, 0, 0.85);
-  
-  /* Content — always bright */
-  --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.6);
-  --text-tertiary: rgba(255, 255, 255, 0.35);
+  /* Accents — desaturated, luminous (not saturated primaries) */
+  --glass-accent-cyan: #a0e6f5;
+  --glass-accent-coral: #ffbeb4;
+  --glass-accent-gold: #ffe1a0;
+  --glass-accent-lilac: #d2beff;
+  --glass-accent-mint: #b8f0d8;
+  --glass-accent-rose: #f5b8d0;
+
+  /* Surfaces always dark, content always bright */
+  --glass-surface-1: rgba(0, 0, 0, 0.55);
+  --glass-surface-2: rgba(15, 15, 20, 0.75);
+  --glass-text-1: rgba(255, 255, 255, 0.95);
+  --glass-text-2: rgba(255, 255, 255, 0.6);
+  --glass-text-3: rgba(255, 255, 255, 0.35);
 }
+/* Full token set including borders, shadows, blur, spacing, radius,
+   and timing → see references/components.md § CSS Foundation */
 ```
 
 ### 3. Typography for Glanceability
@@ -213,33 +199,16 @@ Because the interface competes with the real world for attention, interaction st
 
 Since we're on the web (not real AR glasses), simulate the transparent display effect:
 
-1. **Use a rich photographic or gradient background** behind the UI to simulate the "real world" showing through
-2. **Apply `backdrop-filter: blur()`** on glass surfaces to create the frosted-glass effect
-3. **Layer a subtle noise texture** over glass surfaces for physical realism
-4. **Consider using a looping video or animated gradient** as the background for maximum impact
+- Use a rich photographic or dark gradient background behind the UI to simulate "the real world showing through"
+- Apply `backdrop-filter: blur()` on glass surfaces for the frosted-glass effect
+- Layer a subtle noise texture (`.glass-noise` class) for physical realism
+- Consider a looping video or animated gradient background for maximum impact
 
 ```css
 body {
+  /* Photo background or dark animated gradient */
   background: url('world-background.jpg') center/cover no-repeat fixed;
   min-height: 100vh;
-}
-
-/* Optional: animated gradient as background */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    #0a0a1a 0%,
-    #1a0a2e 25%,
-    #0a1628 50%,
-    #0d1f0d 75%,
-    #1a0a1a 100%
-  );
-  background-size: 400% 400%;
-  animation: gradientShift 20s ease infinite;
-  z-index: -1;
 }
 ```
 
@@ -287,8 +256,9 @@ Transparent UIs have unique accessibility challenges:
 
 @media (prefers-contrast: more) {
   :root {
-    --surface-primary: rgba(0, 0, 0, 0.9);
-    --text-primary: rgba(255, 255, 255, 1);
+    --glass-surface-1: rgba(0, 0, 0, 0.9);
+    --glass-text-1: rgba(255, 255, 255, 1);
+    --glass-border: rgba(255, 255, 255, 0.25);
   }
 }
 ```
